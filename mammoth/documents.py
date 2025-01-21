@@ -82,8 +82,15 @@ class TableRow(HasChildren):
 
 @cobble.data
 class TableCell(HasChildren):
+    BORDER_XML_TO_CSS_PROPERTY_MAP = {
+        "w:top": "border-top",
+        "w:bottom": "border-bottom",
+        "w:left": "border-left",
+        "w:right": "border-right",
+    }
     colspan = cobble.field()
     rowspan = cobble.field()
+    border_properties = cobble.field()
 
 @cobble.data
 class Break(Element):
@@ -187,12 +194,12 @@ def table(children, style_id=None, style_name=None):
 def table_row(children, is_header=None):
     return TableRow(children=children, is_header=bool(is_header))
 
-def table_cell(children, colspan=None, rowspan=None):
+def table_cell(children, colspan=None, rowspan=None, border_properties=None):
     if colspan is None:
         colspan = 1
     if rowspan is None:
         rowspan = 1
-    return TableCell(children=children, colspan=colspan, rowspan=rowspan)
+    return TableCell(children=children, colspan=colspan, rowspan=rowspan, border_properties=border_properties)
 
 
 def numbering_level(level_index, is_ordered):

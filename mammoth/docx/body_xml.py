@@ -273,6 +273,14 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
 
         return _ReadResult([style_id, style_name], [], messages)
 
+    def _read_xml_attributes_to_map(properties, keys):
+        result = {}
+        for key in keys:
+            child = properties.find_child_or_null(key)
+            if child:
+                result[key] = child.attributes
+        return result
+
     def _undefined_style_warning(style_type, style_id):
         return results.warning("{0} style with ID {1} was referenced but not defined in the document".format(style_type, style_id))
 
@@ -360,6 +368,11 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
 
     def table_cell(element):
         properties = element.find_child_or_null("w:tcPr")
+        border_properties = properties.find_child_or_null("w:tcBorders")
+        border_properties_dict = _read_xml_attributes_to_map(
+            border_properties,
+            documents.TableCell.BORDER_XML_TO_CSS_PROPERTY_MAP.keys()
+        ) if border_properties else {}
         gridspan = properties \
             .find_child_or_null("w:gridSpan") \
             .attributes.get("w:val")
@@ -373,7 +386,8 @@ def _create_reader(numbering, content_types, relationships, styles, docx_file, f
             .map(lambda children: _add_attrs(
                 documents.table_cell(
                     children=children,
-                    colspan=colspan
+                    colspan=colspan,
+                    border_properties=border_properties_dict,
                 ),
                 _vmerge=read_vmerge(properties),
             ))
