@@ -245,6 +245,7 @@ class _DocumentConverter(documents.element_visitor(args=1)):
         sz = int(attributes.get('w:sz'))
         color = attributes.get('w:color')
         color = color == 'auto' and 'black' or f'#{color}'
+        print('>>>>>>>>>>>>>>>.. sz', sz)
 
         # 1 sz = 1/8 of a pt. Approximate 1pt ~= 1px. Actual dimensions are 1pt = 1.333px.
         return f'{sz / 8}px {color} solid'
