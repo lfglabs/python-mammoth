@@ -226,11 +226,36 @@ class _DocumentConverter(documents.element_visitor(args=1)):
             attributes["colspan"] = str(table_cell.colspan)
         if table_cell.rowspan != 1:
             attributes["rowspan"] = str(table_cell.rowspan)
+
+        attributes['style'] = self.get_cell_border_style_from_border_properties(table_cell.border_properties)
+
         nodes = [html.force_write] + self._visit_all(table_cell.children, context)
         return [
             html.element(tag_name, attributes, nodes)
         ]
 
+    def get_css_border_value_from_xml_attributes(self, attributes):
+        # Potential values for w:val are 'nil', 'single', 'double', etc.
+        # Only support 'nil' and 'single'. Default others to 'single'
+        if attributes.get('w:val') == 'nil':
+            return 'none'
+
+        sz = int(attributes.get('w:sz'))
+        color = attributes.get('w:color')
+        color = color == 'auto' and 'black' or f'#{color}'
+
+        # 1 sz = 1/8 of a pt. Approximate 1pt ~= 1px. Actual dimensions are 1pt = 1.333px.
+        return f'{sz / 8}px {color} solid'
+
+    def get_cell_border_style_from_border_properties(self, attributes_map):
+        style = []
+        for key in documents.TableCell.BORDER_XML_TO_CSS_PROPERTY_MAP:
+            if attributes_map.get(key):
+                attributes = attributes_map[key]
+                property_name = documents.TableCell.BORDER_XML_TO_CSS_PROPERTY_MAP[key]
+                property_value = self.get_css_border_value_from_xml_attributes(attributes)
+                style.append(f"{property_name}: {property_value}")
+        return '; '.join(style)
 
     def visit_break(self, break_, context):
         return self._find_html_path_for_break(break_).wrap(lambda: [])
